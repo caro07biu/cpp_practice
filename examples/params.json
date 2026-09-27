@@ -1,0 +1,11 @@
+{
+  "left": {
+    "field": "created_at",
+    "type": "time",
+    "mode": "last_30_days"
+  },
+  "right": {
+    "field": "category",
+    "type": "category"
+  }
+}

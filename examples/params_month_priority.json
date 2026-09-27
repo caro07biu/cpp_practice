@@ -1,0 +1,11 @@
+{
+  "left": {
+    "field": "created_at",
+    "type": "time",
+    "mode": "last_24_months"
+  },
+  "right": {
+    "field": "priority",
+    "type": "priority"
+  }
+}

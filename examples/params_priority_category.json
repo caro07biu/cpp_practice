@@ -1,0 +1,10 @@
+{
+  "left": {
+    "field": "priority",
+    "type": "priority"
+  },
+  "right": {
+    "field": "category",
+    "type": "category"
+  }
+}

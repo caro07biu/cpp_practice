@@ -1,0 +1,11 @@
+/target/
+/result.json
+
+# Local editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+
+# Local agent configuration
+/.agents/
+/skills-lock.json

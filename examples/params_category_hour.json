@@ -1,0 +1,11 @@
+{
+  "left": {
+    "field": "category",
+    "type": "category"
+  },
+  "right": {
+    "field": "created_at",
+    "type": "time",
+    "mode": "hour_of_day"
+  }
+}
