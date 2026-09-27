@@ -31,7 +31,7 @@ cargo run -- examples/tickets.json examples/params.json result.json
 目前支持三种维度类型：
 
 - `time`：必须指定 `mode`。
-- `category`：固定输出“退款、物流、账号、其他”。
+- `category`：固定输出示例数据中的6个业务类别以及“其他”。
 - `priority`：固定输出“高、中、低、其他”。
 
 时间模式：
@@ -49,7 +49,7 @@ cargo run -- examples/tickets.json examples/params.json result.json
 {
   "left": {
     "field": "category",
-    "buckets": ["退款", "物流", "账号", "其他"]
+    "buckets": ["退款退货", "物流查询", "商品咨询", "账号问题", "支付问题", "投诉", "其他"]
   },
   "right": {
     "field": "priority",

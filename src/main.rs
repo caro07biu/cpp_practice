@@ -74,9 +74,12 @@ impl Dimension for NamedDimension {
         let value = ticket.get(&self.field).and_then(Value::as_str);
         let name = match self.kind {
             NamedKind::Category => match value {
-                Some(value) if value.contains("退款") => "退款",
-                Some(value) if value.contains("物流") => "物流",
-                Some(value) if value.contains("账号") => "账号",
+                Some("退款退货") => "退款退货",
+                Some("物流查询") => "物流查询",
+                Some("商品咨询") => "商品咨询",
+                Some("账号问题") => "账号问题",
+                Some("支付问题") => "支付问题",
+                Some("投诉") => "投诉",
                 _ => "其他",
             },
             NamedKind::Priority => match value {
@@ -91,7 +94,15 @@ impl Dimension for NamedDimension {
 
     fn buckets(&self) -> Result<Vec<Bucket>> {
         let names: &[&str] = match self.kind {
-            NamedKind::Category => &["退款", "物流", "账号", "其他"],
+            NamedKind::Category => &[
+                "退款退货",
+                "物流查询",
+                "商品咨询",
+                "账号问题",
+                "支付问题",
+                "投诉",
+                "其他",
+            ],
             NamedKind::Priority => &["高", "中", "低", "其他"],
         };
         Ok(names
@@ -348,12 +359,23 @@ mod tests {
             }"#,
         );
 
-        assert_eq!(output.left.buckets, ["退款", "物流", "账号", "其他"]);
+        assert_eq!(
+            output.left.buckets,
+            [
+                "退款退货",
+                "物流查询",
+                "商品咨询",
+                "账号问题",
+                "支付问题",
+                "投诉",
+                "其他"
+            ]
+        );
         assert_eq!(output.right.buckets, ["高", "中", "低", "其他"]);
         assert_eq!(output.matrix[0], [1, 0, 0, 0]);
         assert_eq!(output.matrix[1], [0, 1, 0, 0]);
-        assert_eq!(output.matrix[2], [0, 0, 0, 1]);
         assert_eq!(output.matrix[3], [0, 0, 0, 1]);
+        assert_eq!(output.matrix[4], [0, 0, 0, 1]);
         assert_eq!(output.included_records, 4);
     }
 
@@ -376,7 +398,7 @@ mod tests {
         assert_eq!(output.input_records, 3);
         assert_eq!(output.included_records, 2);
         assert_eq!(output.matrix[0][1], 1);
-        assert_eq!(output.matrix[29][2], 1);
+        assert_eq!(output.matrix[29][3], 1);
     }
 
     #[test]
