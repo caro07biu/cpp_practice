@@ -1,8 +1,52 @@
 # association-buckets
 
+## 项目理解
+
+无论是在观察“关联”还是“趋势”，本质上都是在理解两个变量之间的关系。变量可以是
+时间，也可以是工单类别、优先级等业务类型；本项目将时间与类型统一抽象为可配置的
+“参数”，因此可以任意选择两个参数进行组合、统计和可视化对比。
+
+客服工作中存在大量难以直接写入规则的外部知识，例如某类问题通常在哪个时段集中出现、
+某种优先级经常与哪些业务类别同时出现。这些隐性知识往往保存在客服人员的经验中。
+三维柱状图把两个参数及其组合数量同时呈现出来，让客服能够直观地发现分布、趋势和可能的
+联系；底层的结构化 JSON 矩阵则是同一信息的数学化表达，既方便客服查看，也方便 Agent
+进一步读取、比较和提取信息。
+
+本项目是一道“联系题”：它不替人判断两个变量是否存在因果关系，而是把可观察的联系整理成
+稳定、可复用的数据结构，为人工分析和 Agent 推理提供共同基础。
+
 一次遍历客服工单，统计两个固定参数的二维关联桶，并输出与展示框架无关的 JSON 矩阵。
 
 项目当前状态、设计约定和部署信息见 [PROJECT_NOTES.md](PROJECT_NOTES.md)。
+
+## 分析维度设计
+
+分析器把每个变量实现为统一的 `Dimension`：时间维度负责解析时间并生成连续时间桶，
+类别和优先级维度负责把业务值映射到固定桶，未知值统一进入“其他”。运行时通过 `left`
+和 `right` 任意组合两个维度，先在一次工单遍历中生成稀疏计数，再转换为
+`matrix[左侧桶][右侧桶]`。这种设计让统计逻辑与三维图表解耦，也便于继续增加新的维度。
+
+## 关键发现
+
+以下结论只针对仓库中的50条演示工单，用于展示如何从矩阵读取信息，不代表真实业务总体：
+
+- “类别 × 优先级”中，“支付问题 × 高优先级”为14条，是数量最多的组合；其次是
+  “退款退货 × 高优先级”7条。
+- “最近30天 × 类别”中，2024-06-11的“支付问题”为3条，是单日单类别最高值；支付问题
+  也在6月6日至11日多次出现，形成可继续调查的局部集中现象。
+- 矩阵只能揭示样例数据中的分布和联系，不能单独证明因果关系；实际判断仍需结合客服掌握的
+  业务背景和外部知识。
+
+## AI 工具使用情况
+
+开发过程中使用 Codex Agent 协助梳理需求、实现 Rust 统计逻辑与静态展示页面、补充测试和
+文档，并通过终端执行 `cargo test`、生成演示 JSON 和检查 Git 差异。参数语义、展示方式及
+最终结论由开发者确认；AI 生成内容均通过自动化测试或实际运行结果复核。
+
+## 在线地址
+
+- GitHub 仓库：https://github.com/caro07biu/cpp_practice
+- 在线演示：https://caro07biu.github.io/cpp_practice/
 
 ## 运行
 
@@ -76,13 +120,15 @@ cargo run -- examples/tickets.json examples/params.json result.json
 
 ## 三维演示与 GitHub Pages
 
-`web/index.html` 使用 ECharts 5 和 ECharts-GL 直接读取 `web/result.json`，不需要 npm、
-前端框架或打包步骤。页面支持拖动旋转、滚轮缩放和悬停查看组合数量。
+`web/index.html` 提供两个预设演示入口，选择后由 `web/chart.html` 使用 ECharts 5 和
+ECharts-GL 读取相应的预生成 JSON，不需要 npm、前端框架或打包步骤。图表支持拖动旋转、
+滚轮缩放和悬停查看组合数量。
 
 本地预览时先生成数据，再启动一个静态文件服务器：
 
 ```bash
-cargo run -- examples/tickets.json examples/params.json web/result.json
+cargo run -- examples/tickets.json examples/params.json web/data/time-category.json
+cargo run -- examples/tickets.json examples/params_category_priority.json web/data/category-priority.json
 python3 -m http.server 8000 --directory web
 ```
 
@@ -93,7 +139,7 @@ python3 -m http.server 8000 --directory web
 `Settings → Pages → Build and deployment` 中将来源设为 `GitHub Actions`。工作流会：
 
 1. 运行全部 Rust 测试；
-2. 根据示例配置生成 `web/result.json`；
+2. 根据两个示例配置生成对应的演示 JSON；
 3. 将 `web` 目录发布到 GitHub Pages。
 
 演示依赖 jsDelivr CDN。如果需要完全离线，可将两个 JavaScript 文件下载到 `web/vendor`

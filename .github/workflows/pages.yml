@@ -24,8 +24,10 @@ jobs:
       - name: Test Rust program
         run: cargo test --locked
 
-      - name: Generate matrix data
-        run: cargo run --locked -- examples/tickets.json examples/params.json web/result.json
+      - name: Generate demo matrix data
+        run: |
+          cargo run --locked -- examples/tickets.json examples/params.json web/data/time-category.json
+          cargo run --locked -- examples/tickets.json examples/params_category_priority.json web/data/category-priority.json
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

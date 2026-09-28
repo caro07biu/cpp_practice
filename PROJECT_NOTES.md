@@ -13,8 +13,8 @@
 - 程序入口：`src/main.rs`。
 - 输入数据：`examples/tickets.json`，当前包含50条演示工单。
 - 默认配置：`examples/params.json`，计算“最近30天 × category”。
-- 核心输出：`result.json` 或 `web/result.json`。
-- 展示页面：`web/index.html`。
+- 核心输出：`result.json` 或 `web/data/*.json`。
+- 展示页面：`web/index.html` 选择演示，`web/chart.html` 展示三维图表。
 - 3D图表：ECharts 5.6.0 + ECharts-GL 2.0.9，通过 CDN 加载。
 - 自动部署：`.github/workflows/pages.yml`。
 
@@ -78,10 +78,11 @@ cargo test --locked
 cargo run --locked -- examples/tickets.json examples/params.json result.json
 ```
 
-生成网页使用的数据：
+生成网页使用的两个演示数据：
 
 ```bash
-cargo run --locked -- examples/tickets.json examples/params.json web/result.json
+cargo run --locked -- examples/tickets.json examples/params.json web/data/time-category.json
+cargo run --locked -- examples/tickets.json examples/params_category_priority.json web/data/category-priority.json
 ```
 
 本地预览网页：

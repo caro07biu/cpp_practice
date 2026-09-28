@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>工单关联矩阵 3D</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f3f6fb; color: #172033; font-family: system-ui, "Noto Sans SC", sans-serif; }
+    main { max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
+    .back { color: #2563eb; text-decoration: none; }
+    h1 { margin: 18px 0 6px; font-size: 24px; }
+    #summary { margin: 0 0 18px; color: #64748b; }
+    #chart { width: 100%; height: min(76vh, 720px); min-height: 480px; background: #fff; border-radius: 16px; box-shadow: 0 10px 35px rgb(25 52 91 / 10%); }
+    #error { padding: 24px; color: #b91c1c; }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="./index.html">← 返回选择演示</a>
+    <h1 id="title">工单关联矩阵</h1>
+    <p id="summary">正在载入数据…</p>
+    <div id="chart" role="img" aria-label="两个参数的三维关联柱状图"></div>
+    <div id="error" hidden></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
+  <script>
+    const demos = {
+      'time-category': { title: '最近 30 天 × 工单类别', data: './data/time-category.json' },
+      'category-priority': { title: '工单类别 × 优先级', data: './data/category-priority.json' }
+    };
+    const selected = new URLSearchParams(location.search).get('demo');
+    const demo = demos[selected] || demos['time-category'];
+    const title = document.getElementById('title');
+    const summary = document.getElementById('summary');
+    const chartElement = document.getElementById('chart');
+    const errorElement = document.getElementById('error');
+    title.textContent = demo.title;
+
+    fetch(demo.data)
+      .then(response => {
+        if (!response.ok) throw new Error(`读取演示数据失败：${response.status}`);
+        return response.json();
+      })
+      .then(result => {
+        const points = [];
+        result.matrix.forEach((row, leftIndex) => {
+          row.forEach((value, rightIndex) => {
+            if (value > 0) points.push([rightIndex, leftIndex, value]);
+          });
+        });
+        const maxValue = Math.max(1, ...points.map(point => point[2]));
+        const chart = echarts.init(chartElement);
+        chart.setOption({
+          tooltip: {
+            formatter: params => {
+              const [rightIndex, leftIndex, value] = params.value;
+              return [
+                `${result.left.field}：${result.left.buckets[leftIndex]}`,
+                `${result.right.field}：${result.right.buckets[rightIndex]}`,
+                `数量：${value}`
+              ].join('<br>');
+            }
+          },
+          visualMap: { max: maxValue, calculable: true, orient: 'horizontal', left: 'center', bottom: 12, inRange: { color: ['#dbeafe', '#3b82f6', '#172554'] } },
+          xAxis3D: { type: 'category', name: result.right.field, data: result.right.buckets },
+          yAxis3D: { type: 'category', name: result.left.field, data: result.left.buckets },
+          zAxis3D: { type: 'value', name: '数量', minInterval: 1 },
+          grid3D: {
+            boxWidth: 160,
+            boxDepth: Math.max(60, Math.min(180, result.left.buckets.length * 8)),
+            viewControl: { alpha: 24, beta: 36, distance: 220 },
+            light: { main: { intensity: 1.1 }, ambient: { intensity: 0.5 } }
+          },
+          series: [{ type: 'bar3D', data: points, shading: 'lambert', bevelSize: 0.15, emphasis: { itemStyle: { color: '#f97316' } } }]
+        });
+        summary.textContent = `${result.included_records}/${result.input_records} 条记录进入矩阵 · 可拖动旋转、滚轮缩放`;
+        window.addEventListener('resize', () => chart.resize());
+      })
+      .catch(error => {
+        summary.textContent = '数据载入失败';
+        chartElement.hidden = true;
+        errorElement.hidden = false;
+        errorElement.textContent = error.message;
+      });
+  </script>
+</body>
+</html>
